@@ -1,0 +1,41 @@
+location ^~ /${HOSTNAME}/api/ {
+    client_max_body_size 32m;
+    include /etc/nginx/asgi_params;
+    rewrite /${HOSTNAME}/(.*) /$1  break;
+    proxy_pass http://${HOSTNAME}/;
+
+    # Настройки таймаутов
+    keepalive_timeout 300s 300s;
+    proxy_connect_timeout 300s;
+    proxy_send_timeout 300s;
+    proxy_read_timeout 300s;
+    send_timeout 300s;
+}
+
+# Статика Vue
+location ^~ /${HOSTNAME}/static/ {
+    root /web-static;
+    try_files $uri =404;
+}
+
+# Главная точка входа Vue + client-side routes
+location ^~ /${HOSTNAME}/ {
+    root /web-static;
+    index index.html;
+    try_files $uri /${HOSTNAME}/index.html;
+}
+
+location ^~ /${HOSTNAME}/docs {
+    proxy_pass http://${HOSTNAME}/docs;
+    proxy_set_header Host $host;
+}
+
+location ^~ /${HOSTNAME}/redoc {
+    proxy_pass http://${HOSTNAME}/redoc;
+    proxy_set_header Host $host;
+}
+
+location ^~ /${HOSTNAME}/openapi.json {
+    proxy_pass http://${HOSTNAME}/openapi.json;
+    proxy_set_header Host $host;
+}

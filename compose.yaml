@@ -1,0 +1,30 @@
+name: ${PROJECT_NAME}
+services:
+  ${SERVICE_NAME}:
+    image: ${REGISTRY_DOMAIN}/${IMAGE_NAME}:${VERSION}
+    container_name: ${SERVICE_NAME}
+    hostname: ${SERVICE_NAME}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - composes:/opt/awada/
+      - sockets:/opt/awada-sockets/
+      - snippets:/etc/nginx/snippets/
+      - schemas:/opt/schemas/
+      - project:/var/project/
+      - configs:/configs/
+      - web-static:/web-static/
+    restart: unless-stopped
+    environment:
+      VERSION: ${VERSION}
+    depends_on:
+      - postgres
+      - mqtt
+volumes:
+  composes:
+  sockets:
+  snippets:
+  schemas:
+  project:
+  configs:
+  web-static:

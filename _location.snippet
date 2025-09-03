@@ -1,0 +1,20 @@
+location ^~ /${HOSTNAME} {
+    client_max_body_size 32m;
+    include /etc/nginx/asgi_params;
+    rewrite /${HOSTNAME}/(.*) /$1  break;
+    proxy_pass http://${HOSTNAME};
+
+    # Настройки таймаутов
+    keepalive_timeout 300s 300s;
+    proxy_connect_timeout 300s;
+    proxy_send_timeout 300s;
+    proxy_read_timeout 300s;
+    send_timeout 300s;
+}
+location  ^~/${HOSTNAME}/static/ {
+    root /web-static/${HOSTNAME};
+    #rewrite /${HOSTNAME}/static/(.*) /$1/static/  break;
+
+    index index.html;
+    try_files $uri $uri/ /${HOSTNAME}/index.html;
+}

@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "nigths-watch"
+version = "0.1.0"
+description = ""
+authors = ["e.anisimov <e.anisimov@awada.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
