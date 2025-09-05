@@ -130,8 +130,8 @@ const highlightStyle = new Style({
 
 // ---------- конфиги ----------
 const configs = {
-  config1: () => import("../assets/config1.json"),
-  config2: () => import("../assets/config2.json")
+  config1: () => import("../assets/geoConfig.json"),
+  config2: () => import("../assets/geoConfig.json")
 }
 
 // ---------- инициализация карты ----------

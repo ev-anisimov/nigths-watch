@@ -1,28 +1,18 @@
-import {createRouter, createWebHistory} from 'vue-router'
+// src/router/index.js
+import { createRouter, createWebHistory } from 'vue-router';
+import MapPage from '../views/MapPage.vue';
 
 const routes = [
-    {
-        path: '/',
-        name: 'home',
-        component: () => import(/* webpackChunkName: "about" */ '../App.vue')
-    },
-    // {
-    //     path: '/about',
-    //     name: 'about',
-    //     component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue'),
-    //     meta: {requiresAuth: false} // 👈 обязательно!
-    // },
-    {
-        path: '/maps',
-        name: 'DrawMap',
-        component: () => import(/* webpackChunkName: "about" */ '../views/DrawMap.vue'),
-        meta: {requiresAuth: false} // 👈 обязательно!
-    },
-]
+  {
+    path: '/',
+    name: 'MapPage',
+    component: MapPage,
+  },
+];
 
-const mainRouter = createRouter({
-    history: createWebHistory(process.env.BASE_URL),
-    routes
-})
+const router = createRouter({
+  history: createWebHistory('/night/'),
+  routes,
+});
 
-export default mainRouter
+export default router;
