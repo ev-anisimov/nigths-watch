@@ -28,7 +28,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, reactive } from "vue";
+import { ref, reactive, onMounted, onBeforeUnmount } from "vue";
 import geoConfigData from "@/assets/geoConfig.json";
 
 const mapRef = ref(null);
@@ -38,7 +38,7 @@ let drawingLine = ref(false);
 let lineCoords = [];
 let polyline = null;
 
-// Текущее состояние карты
+// --- состояние карты ---
 let currentConfig = reactive({
   center: [0, 0],
   zoom: 1,
@@ -46,13 +46,17 @@ let currentConfig = reactive({
   polylines: [],
 });
 
-// состояние контекстного меню
+// --- хранилища geoObjects ---
+const placemarkObjects = new Map();
+const polylineObjects = new Map();
+
+// --- контекстное меню ---
 const contextMenu = reactive({
   visible: false,
   x: 0,
   y: 0,
-  type: null,       // "placemark" | "polyline"
-  object: null      // ymaps.Placemark | ymaps.Polyline
+  type: null, // "placemark" | "polyline"
+  object: null // ymaps object
 });
 
 onMounted(() => {
@@ -72,9 +76,8 @@ function initMap() {
   mapInstance.events.add("boundschange", updateMapState);
 
   // Клик по карте — ставим метку или рисуем линию
-  mapInstance.events.add("click", function (e) {
+  mapInstance.events.add("click", e => {
     const coords = e.get("coords");
-
     if (drawingLine.value) {
       lineCoords.push(coords);
       updatePolyline();
@@ -112,7 +115,9 @@ function addPlacemark(coords, name) {
   });
 
   mapInstance.geoObjects.add(placemark);
+
   currentConfig.placemarks.push({ coords, name });
+  placemarkObjects.set(JSON.stringify(coords), placemark);
 }
 
 function renamePlacemark() {
@@ -121,10 +126,9 @@ function renamePlacemark() {
   const newName = prompt("Введите новое название метки:", oldName);
   if (newName && newName.trim() !== "") {
     contextMenu.object.properties.set("balloonContent", newName);
-
     const coords = contextMenu.object.geometry.getCoordinates();
     const pm = currentConfig.placemarks.find(
-      pm => pm.coords[0] === coords[0] && pm.coords[1] === coords[1] && pm.name === oldName
+      pm => pm.coords[0] === coords[0] && pm.coords[1] === coords[1]
     );
     if (pm) pm.name = newName;
   }
@@ -134,12 +138,16 @@ function renamePlacemark() {
 function deletePlacemark() {
   if (!contextMenu.object) return;
   const coords = contextMenu.object.geometry.getCoordinates();
+
+  mapInstance.geoObjects.remove(placemarkObjects.get(JSON.stringify(coords)));
   const name = contextMenu.object.properties.get("balloonContent");
 
-  mapInstance.geoObjects.remove(contextMenu.object);
   currentConfig.placemarks = currentConfig.placemarks.filter(
     pm => !(pm.coords[0] === coords[0] && pm.coords[1] === coords[1] && pm.name === name)
   );
+  placemarkObjects.delete(JSON.stringify(coords));
+
+  // restoreFromConfig(currentConfig);
   hideContextMenu();
 }
 
@@ -158,17 +166,21 @@ function addPolyline(coordsArray) {
   });
 
   mapInstance.geoObjects.add(pl);
+
   currentConfig.polylines.push(coordsArray);
+  polylineObjects.set(JSON.stringify(coordsArray), pl);
 }
 
 function deletePolyline() {
   if (!contextMenu.object) return;
-  const coordsArray = contextMenu.object.geometry.getCoordinates();
 
-  mapInstance.geoObjects.remove(contextMenu.object);
+  const coordsArray = contextMenu.object.geometry.getCoordinates();
+  mapInstance.geoObjects.remove(polylineObjects.get(JSON.stringify(coordsArray)));
   currentConfig.polylines = currentConfig.polylines.filter(
     line => JSON.stringify(line) !== JSON.stringify(coordsArray)
   );
+  polylineObjects.delete(JSON.stringify(coordsArray));
+
   hideContextMenu();
 }
 
@@ -233,13 +245,15 @@ function loadConfig(event) {
 
 function restoreFromConfig(config) {
   mapInstance.geoObjects.removeAll();
-
   currentConfig.center = config.center;
   currentConfig.zoom = config.zoom;
   mapInstance.setCenter(config.center, config.zoom);
 
   currentConfig.placemarks.splice(0);
   currentConfig.polylines.splice(0);
+  placemarkObjects.clear();
+  polylineObjects.clear();
+
   config.placemarks.forEach(pm => addPlacemark(pm.coords, pm.name));
   config.polylines.forEach(coordsArray => addPolyline(coordsArray));
 }
